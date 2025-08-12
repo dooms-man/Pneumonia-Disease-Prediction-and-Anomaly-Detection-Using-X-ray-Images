@@ -25,7 +25,6 @@ Our approach uses a **Hybrid CNN (DenseNet121) + Vision Transformer (ViT)** arch
 - Extracts **768-dimensional embeddings** from image patches.
 
 ### 3️⃣ Feature Fusion + Classifier
-```plaintext
 [ CNN Features (1024) ] + [ ViT Features (768) ]
              ↓ Concatenate
       Fully Connected Layer (512 → 2 classes)
