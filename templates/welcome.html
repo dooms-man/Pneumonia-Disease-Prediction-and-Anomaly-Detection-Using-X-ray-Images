@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pneumonia Detection</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&display=swap" rel="stylesheet">
+  <style>
+   * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg,  #ff6b6b  0%, #50cdff 50%, rgb(171, 8, 236) 100%);
+      position: relative;
+    }
+
+    .cubes-background {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      opacity: 0.4;
+    }
+
+    .welcome-box {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 25px;
+      padding: 50px 70px;
+      text-align: center;
+      animation: dropDown 1.2s ease-out;
+      max-width: 650px;
+      position: relative;
+      z-index: 10;
+      box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      overflow: hidden;
+    }
+
+    .welcome-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, 
+        rgba(82, 39, 255, 0.1) 0%, 
+        rgba(255, 107, 107, 0.1) 50%, 
+        rgba(0, 191, 255, 0.1) 100%);
+      border-radius: 25px;
+      z-index: -1;
+      opacity: 0.3;
+    }
+
+    .welcome-box::after {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(45deg, 
+        #5227FF, 
+        #ff6b6b, 
+        #00bfff, 
+        #5227FF);
+      border-radius: 27px;
+      z-index: -2;
+      animation: borderGlow 3s linear infinite;
+      opacity: 0.6;
+    }
+
+    @keyframes dropDown {
+      0% {
+        transform: translateY(-150px) rotateX(-90deg);
+        opacity: 0;
+        filter: blur(10px);
+      }
+      50% {
+        transform: translateY(20px) rotateX(10deg);
+        opacity: 0.7;
+        filter: blur(2px);
+      }
+      100% {
+        transform: translateY(0) rotateX(0deg);
+        opacity: 1;
+        filter: blur(0px);
+      }
+    }
+
+    @keyframes borderGlow {
+      0%, 100% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-5px);
+      }
+    }
+
+    .welcome-box h1 {
+      font-size: 3.2rem;
+      margin-bottom: 25px;
+      color: #ffffff;
+      text-shadow: 
+        0 0 20px rgba(255, 255, 255, 0.5),
+        0 4px 8px rgba(0, 0, 0, 0.3);
+      font-family: "Roboto Flex", sans-serif;
+      cursor: pointer;
+      font-weight: 500;
+      letter-spacing: 1px;
+      line-height: 1.2;
+    }
+
+    /* Variable Proximity Styles */
+    .variable-proximity {
+      font-family: "Roboto Flex", sans-serif;
+      display: inline-block;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .welcome-box p {
+      font-size: 1.8rem;
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 45px;
+      font-weight: 300;
+      line-height: 1.4;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .welcome-box button {
+      padding: 18px 40px;
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, #00bfff 0%, #5227FF 100%);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      box-shadow: 
+        0 8px 25px rgba(56, 28, 168, 0.4),
+        0 0 0 1px rgba(75, 238, 43, 0.1);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .welcome-box button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, 
+        transparent, 
+        rgba(22, 26, 230, 0.2), 
+        transparent);
+      transition: left 0.5s ease;
+    }
+
+    .welcome-box button:hover {
+      background: linear-gradient(135deg, #10e2b5 0%, #07ffb5 100%);
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 
+        0 12px 35px rgba(82, 39, 255, 0.6),
+        0 0 0 1px rgba(255, 255, 255, 0.2),
+        0 0 30px rgba(0, 191, 255, 0.3);
+      animation: float 2s ease-in-out infinite;
+    }
+
+    .welcome-box button:hover::before {
+      left: 100%;
+    }
+
+    .welcome-box button:active {
+      transform: translateY(-1px) scale(0.98);
+      box-shadow: 
+        0 6px 20px rgba(154, 255, 39, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+    }
+
+    /* Cubes Styles */
+    :root {
+      --col-gap: 8%;
+      --row-gap: 8%;
+      --cube-perspective: 99999999px;
+      --cube-face-border: 2px dashed #011103 ;
+      --cube-face-bg: rgba(28, 49, 143, 0.8);
+    }
+
+    .default-animation {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      aspect-ratio: 1 / 1;
+    }
+
+    .default-animation--scene {
+      display: grid;
+      width: 100%;
+      height: 100%;
+      column-gap: var(--col-gap);
+      row-gap: var(--row-gap);
+      perspective: var(--cube-perspective);
+      grid-auto-rows: 1fr;
+    }
+
+    .cube {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      aspect-ratio: 1 / 1;
+      transform-style: preserve-3d;
+    }
+
+    .cube::before {
+      content: '';
+      position: absolute;
+      top: -36px;
+      right: -36px;
+      bottom: -36px;
+      left: -36px;
+    }
+
+    .default-animation .cube-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--cube-face-bg);
+      border: var(--cube-face-border);
+      opacity: 1;
+    }
+
+    .default-animation .cube-face--top {
+      transform: translateY(-50%) rotateX(90deg);
+    }
+
+    .default-animation .cube-face--bottom {
+      transform: translateY(50%) rotateX(-90deg);
+    }
+
+    .default-animation .cube-face--left {
+      transform: translateX(-50%) rotateY(-90deg);
+    }
+
+    .default-animation .cube-face--right {
+      transform: translateX(50%) rotateY(90deg);
+    }
+
+    .default-animation .cube-face--back,
+    .default-animation .cube-face--front {
+      transform: rotateY(-90deg) translateX(50%) rotateY(90deg);
+    }
+
+    @media (max-width: 768px) {
+      .default-animation {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="cubes-background" id="cubesContainer"></div>
+
+  <div class="welcome-box" id="welcomeContainer">
+    <h1 id="animatedTitle"></h1>
+    <p>Do you want to check if you are diagnosed with pneumonia?</p>
+    <a href="/awareness">
+      <button>Start Diagnosis</button>
+    </a>
+  </div>
+
+  <script>
+    class Cubes {
+      constructor(container, options = {}) {
+        this.container = container;
+        this.options = {
+          gridSize: options.gridSize || 8,
+          cubeSize: options.cubeSize || null,
+          maxAngle: options.maxAngle || 45,
+          radius: options.radius || 3,
+          easing: options.easing || "power3.out",
+          duration: options.duration || { enter: 0.3, leave: 0.6 },
+          cellGap: options.cellGap || null,
+          borderStyle: options.borderStyle || "2px dashed #5227FF",
+          faceColor: options.faceColor || "rgba(26, 26, 46, 0.8)",
+          shadow: options.shadow || false,
+          autoAnimate: options.autoAnimate !== false,
+          rippleOnClick: options.rippleOnClick !== false,
+          rippleColor: options.rippleColor || "#ff6b6b",
+          rippleSpeed: options.rippleSpeed || 2,
+        };
+
+        this.sceneRef = null;
+        this.rafRef = null;
+        this.idleTimerRef = null;
+        this.userActiveRef = false;
+        this.simPosRef = { x: 0, y: 0 };
+        this.simTargetRef = { x: 0, y: 0 };
+        this.simRAFRef = null;
+
+        this.init();
+      }
+
+      init() {
+        this.createScene();
+        this.setupEventListeners();
+        if (this.options.autoAnimate) {
+          this.startAutoAnimation();
+        }
+      }
+
+      createScene() {
+        const { gridSize, cubeSize, cellGap, borderStyle, faceColor, shadow } = this.options;
+
+        const colGap = typeof cellGap === "number" ? `${cellGap}px` : 
+          (cellGap?.col !== undefined ? `${cellGap.col}px` : "3%");
+        const rowGap = typeof cellGap === "number" ? `${cellGap}px` : 
+          (cellGap?.row !== undefined ? `${cellGap.row}px` : "3%");
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'default-animation';
+        wrapper.style.setProperty('--cube-face-border', borderStyle);
+        wrapper.style.setProperty('--cube-face-bg', faceColor);
+        wrapper.style.setProperty('--cube-face-shadow', 
+          shadow === true ? "0 0 6px rgba(0,0,0,.5)" : shadow || "none");
+
+        if (cubeSize) {
+          wrapper.style.width = `${gridSize * cubeSize}px`;
+          wrapper.style.height = `${gridSize * cubeSize}px`;
+        }
+
+        const scene = document.createElement('div');
+        scene.className = 'default-animation--scene';
+        scene.style.gridTemplateColumns = cubeSize ? 
+          `repeat(${gridSize}, ${cubeSize}px)` : `repeat(${gridSize}, 1fr)`;
+        scene.style.gridTemplateRows = cubeSize ? 
+          `repeat(${gridSize}, ${cubeSize}px)` : `repeat(${gridSize}, 1fr)`;
+        scene.style.columnGap = colGap;
+        scene.style.rowGap = rowGap;
+
+        // Create cubes
+        for (let r = 0; r < gridSize; r++) {
+          for (let c = 0; c < gridSize; c++) {
+            const cube = document.createElement('div');
+            cube.className = 'cube';
+            cube.dataset.row = r;
+            cube.dataset.col = c;
+
+            const faces = ['top', 'bottom', 'left', 'right', 'front', 'back'];
+            faces.forEach(face => {
+              const faceElement = document.createElement('div');
+              faceElement.className = `cube-face cube-face--${face}`;
+              cube.appendChild(faceElement);
+            });
+
+            scene.appendChild(cube);
+          }
+        }
+
+        wrapper.appendChild(scene);
+        this.container.appendChild(wrapper);
+        this.sceneRef = scene;
+      }
+
+      tiltAt = (rowCenter, colCenter) => {
+        if (!this.sceneRef) return;
+        
+        const { maxAngle, radius, duration, easing } = this.options;
+        const { enter: enterDur, leave: leaveDur } = duration;
+
+        this.sceneRef.querySelectorAll('.cube').forEach((cube) => {
+          const r = +cube.dataset.row;
+          const c = +cube.dataset.col;
+          const dist = Math.hypot(r - rowCenter, c - colCenter);
+          
+          if (dist <= radius) {
+            const pct = 1 - dist / radius;
+            const angle = pct * maxAngle;
+            gsap.to(cube, {
+              duration: enterDur,
+              ease: easing,
+              overwrite: true,
+              rotateX: -angle,
+              rotateY: angle,
+            });
+          } else {
+            gsap.to(cube, {
+              duration: leaveDur,
+              ease: "power3.out",
+              overwrite: true,
+              rotateX: 0,
+              rotateY: 0,
+            });
+          }
+        });
+      }
+
+      onPointerMove = (e) => {
+        this.userActiveRef = true;
+        if (this.idleTimerRef) clearTimeout(this.idleTimerRef);
+
+        const rect = this.sceneRef.getBoundingClientRect();
+        const cellW = rect.width / this.options.gridSize;
+        const cellH = rect.height / this.options.gridSize;
+        const colCenter = (e.clientX - rect.left) / cellW;
+        const rowCenter = (e.clientY - rect.top) / cellH;
+
+        if (this.rafRef) cancelAnimationFrame(this.rafRef);
+        this.rafRef = requestAnimationFrame(() =>
+          this.tiltAt(rowCenter, colCenter)
+        );
+
+        this.idleTimerRef = setTimeout(() => {
+          this.userActiveRef = false;
+        }, 3000);
+      }
+
+      resetAll = () => {
+        if (!this.sceneRef) return;
+        this.sceneRef.querySelectorAll('.cube').forEach((cube) =>
+          gsap.to(cube, {
+            duration: this.options.duration.leave,
+            rotateX: 0,
+            rotateY: 0,
+            ease: "power3.out",
+          })
+        );
+      }
+
+      onClick = (e) => {
+        if (!this.options.rippleOnClick || !this.sceneRef) return;
+        
+        const { gridSize, faceColor, rippleColor, rippleSpeed } = this.options;
+        const rect = this.sceneRef.getBoundingClientRect();
+        const cellW = rect.width / gridSize;
+        const cellH = rect.height / gridSize;
+        const colHit = Math.floor((e.clientX - rect.left) / cellW);
+        const rowHit = Math.floor((e.clientY - rect.top) / cellH);
+
+        const baseRingDelay = 0.15;
+        const baseAnimDur = 0.3;
+        const baseHold = 0.6;
+
+        const spreadDelay = baseRingDelay / rippleSpeed;
+        const animDuration = baseAnimDur / rippleSpeed;
+        const holdTime = baseHold / rippleSpeed;
+
+        const rings = {};
+        this.sceneRef.querySelectorAll('.cube').forEach((cube) => {
+          const r = +cube.dataset.row;
+          const c = +cube.dataset.col;
+          const dist = Math.hypot(r - rowHit, c - colHit);
+          const ring = Math.round(dist);
+          if (!rings[ring]) rings[ring] = [];
+          rings[ring].push(cube);
+        });
+
+        Object.keys(rings)
+          .map(Number)
+          .sort((a, b) => a - b)
+          .forEach((ring) => {
+            const delay = ring * spreadDelay;
+            const faces = rings[ring].flatMap((cube) =>
+              Array.from(cube.querySelectorAll('.cube-face'))
+            );
+
+            gsap.to(faces, {
+              backgroundColor: rippleColor,
+              duration: animDuration,
+              delay,
+              ease: "power3.out",
+            });
+            gsap.to(faces, {
+              backgroundColor: faceColor,
+              duration: animDuration,
+              delay: delay + animDuration + holdTime,
+              ease: "power3.out",
+            });
+          });
+      }
+
+      startAutoAnimation() {
+        if (!this.options.autoAnimate || !this.sceneRef) return;
+        
+        this.simPosRef = {
+          x: Math.random() * this.options.gridSize,
+          y: Math.random() * this.options.gridSize,
+        };
+        this.simTargetRef = {
+          x: Math.random() * this.options.gridSize,
+          y: Math.random() * this.options.gridSize,
+        };
+        
+        const speed = 0.02;
+        const loop = () => {
+          if (!this.userActiveRef) {
+            const pos = this.simPosRef;
+            const tgt = this.simTargetRef;
+            pos.x += (tgt.x - pos.x) * speed;
+            pos.y += (tgt.y - pos.y) * speed;
+            this.tiltAt(pos.y, pos.x);
+            
+            if (Math.hypot(pos.x - tgt.x, pos.y - tgt.y) < 0.1) {
+              this.simTargetRef = {
+                x: Math.random() * this.options.gridSize,
+                y: Math.random() * this.options.gridSize,
+              };
+            }
+          }
+          this.simRAFRef = requestAnimationFrame(loop);
+        };
+        this.simRAFRef = requestAnimationFrame(loop);
+      }
+
+      setupEventListeners() {
+        if (!this.sceneRef) return;
+        
+        this.sceneRef.addEventListener('pointermove', this.onPointerMove);
+        this.sceneRef.addEventListener('pointerleave', this.resetAll);
+        this.sceneRef.addEventListener('click', this.onClick);
+      }
+
+      destroy() {
+        if (this.sceneRef) {
+          this.sceneRef.removeEventListener('pointermove', this.onPointerMove);
+          this.sceneRef.removeEventListener('pointerleave', this.resetAll);
+          this.sceneRef.removeEventListener('click', this.onClick);
+        }
+        if (this.rafRef) cancelAnimationFrame(this.rafRef);
+        if (this.idleTimerRef) clearTimeout(this.idleTimerRef);
+        if (this.simRAFRef) cancelAnimationFrame(this.simRAFRef);
+      }
+    }
+
+    // Variable Proximity Text Animation Class
+    class VariableProximity {
+      constructor(element, options = {}) {
+        this.element = element;
+        this.containerRef = options.containerRef || document.body;
+        this.options = {
+          label: options.label || element.textContent,
+          fromFontVariationSettings: options.fromFontVariationSettings || "'wght' 400, 'opsz' 14",
+          toFontVariationSettings: options.toFontVariationSettings || "'wght' 900, 'opsz' 144",
+          radius: options.radius || 80,
+          falloff: options.falloff || "linear",
+          ...options
+        };
+        
+        this.letterRefs = [];
+        this.interpolatedSettings = [];
+        this.mousePosition = { x: 0, y: 0 };
+        this.lastPosition = { x: null, y: null };
+        
+        this.init();
+      }
+
+      init() {
+        this.setupMouseTracking();
+        this.renderText();
+        this.startAnimationLoop();
+      }
+
+      setupMouseTracking() {
+        const updatePosition = (x, y) => {
+          const rect = this.containerRef.getBoundingClientRect();
+          this.mousePosition = { x: x - rect.left, y: y - rect.top };
+        };
+
+        const handleMouseMove = (ev) => updatePosition(ev.clientX, ev.clientY);
+        const handleTouchMove = (ev) => {
+          const touch = ev.touches[0];
+          updatePosition(touch.clientX, touch.clientY);
+        };
+
+        window.addEventListener("mousemove", handleMouseMove);
+        window.addEventListener("touchmove", handleTouchMove);
+        
+        this.cleanup = () => {
+          window.removeEventListener("mousemove", handleMouseMove);
+          window.removeEventListener("touchmove", handleTouchMove);
+        };
+      }
+
+      parseSettings(settingsStr) {
+        const settings = new Map();
+        settingsStr.split(",").forEach(s => {
+          const [name, value] = s.trim().split(" ");
+          settings.set(name.replace(/['"]/g, ""), parseFloat(value));
+        });
+        return settings;
+      }
+
+      getParsedSettings() {
+        const fromSettings = this.parseSettings(this.options.fromFontVariationSettings);
+        const toSettings = this.parseSettings(this.options.toFontVariationSettings);
+        
+        return Array.from(fromSettings.entries()).map(([axis, fromValue]) => ({
+          axis,
+          fromValue,
+          toValue: toSettings.get(axis) ?? fromValue,
+        }));
+      }
+
+      calculateDistance(x1, y1, x2, y2) {
+        return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+      }
+
+      calculateFalloff(distance) {
+        const norm = Math.min(Math.max(1 - distance / this.options.radius, 0), 1);
+        switch (this.options.falloff) {
+          case "exponential": return norm ** 2;
+          case "gaussian": return Math.exp(-((distance / (this.options.radius / 2)) ** 2) / 2);
+          case "linear":
+          default: return norm;
+        }
+      }
+
+      renderText() {
+        const words = this.options.label.split(" ");
+        let letterIndex = 0;
+        let htmlContent = "";
+
+        words.forEach((word, wordIndex) => {
+          htmlContent += '<span style="display: inline-block; white-space: nowrap;">';
+          
+          word.split("").forEach((letter) => {
+            htmlContent += `<span data-letter-index="${letterIndex}" style="display: inline-block; font-variation-settings: ${this.options.fromFontVariationSettings};" aria-hidden="true">${letter}</span>`;
+            letterIndex++;
+          });
+          
+          if (wordIndex < words.length - 1) {
+            htmlContent += '<span style="display: inline-block;">&nbsp;</span>';
+          }
+          htmlContent += '</span>';
+        });
+
+        htmlContent += `<span class="sr-only">${this.options.label}</span>`;
+        
+        this.element.innerHTML = htmlContent;
+        this.element.className += " variable-proximity";
+        
+        // Get references to all letter elements
+        this.letterRefs = Array.from(this.element.querySelectorAll('[data-letter-index]'));
+      }
+
+      updateAnimation() {
+        const containerRect = this.containerRef.getBoundingClientRect();
+        const { x, y } = this.mousePosition;
+        
+        if (this.lastPosition.x === x && this.lastPosition.y === y) {
+          return;
+        }
+        this.lastPosition = { x, y };
+
+        const parsedSettings = this.getParsedSettings();
+
+        this.letterRefs.forEach((letterRef, index) => {
+          if (!letterRef) return;
+
+          const rect = letterRef.getBoundingClientRect();
+          const letterCenterX = rect.left + rect.width / 2 - containerRect.left;
+          const letterCenterY = rect.top + rect.height / 2 - containerRect.top;
+
+          const distance = this.calculateDistance(
+            this.mousePosition.x,
+            this.mousePosition.y,
+            letterCenterX,
+            letterCenterY
+          );
+
+          if (distance >= this.options.radius) {
+            letterRef.style.fontVariationSettings = this.options.fromFontVariationSettings;
+            return;
+          }
+
+          const falloffValue = this.calculateFalloff(distance);
+          const newSettings = parsedSettings
+            .map(({ axis, fromValue, toValue }) => {
+              const interpolatedValue = fromValue + (toValue - fromValue) * falloffValue;
+              return `'${axis}' ${interpolatedValue}`;
+            })
+            .join(", ");
+
+          this.interpolatedSettings[index] = newSettings;
+          letterRef.style.fontVariationSettings = newSettings;
+        });
+      }
+
+      startAnimationLoop() {
+        const loop = () => {
+          this.updateAnimation();
+          this.animationFrame = requestAnimationFrame(loop);
+        };
+        this.animationFrame = requestAnimationFrame(loop);
+      }
+
+      destroy() {
+        if (this.cleanup) this.cleanup();
+        if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
+      }
+    }
+
+    // Initialize the cubes background and text animation
+    window.addEventListener('load', () => {
+      const container = document.getElementById('cubesContainer');
+      const welcomeContainer = document.getElementById('welcomeContainer');
+      const titleElement = document.getElementById('animatedTitle');
+      
+      // Initialize cubes
+      new Cubes(container, {
+        gridSize: 10,
+        maxAngle: 60,
+        radius: 4,
+        cellGap: 8,
+        borderStyle: "2px dashed #5227FF",
+        faceColor: "rgba(26, 26, 46, 0.8)",
+        rippleColor: "#ff6b6b",
+        rippleSpeed: 1.5,
+        autoAnimate: true,
+        rippleOnClick: true
+      });
+
+      // Initialize variable proximity text animation
+      new VariableProximity(titleElement, {
+        label: "Welcome to Deep Lungs",
+        containerRef: welcomeContainer,
+        fromFontVariationSettings: "'wght' 400, 'opsz' 14",
+        toFontVariationSettings: "'wght' 900, 'opsz' 144",
+        radius: 100,
+        falloff: "exponential"
+      });
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      const container = document.getElementById('cubesContainer');
+      const welcomeContainer = document.getElementById('welcomeContainer');
+      const titleElement = document.getElementById('animatedTitle');
+      
+      container.innerHTML = '';
+      new Cubes(container, {
+        gridSize: 10,
+        maxAngle: 60,
+        radius: 4,
+        cellGap: 8,
+        borderStyle: "2px dashed #5227FF",
+        faceColor: "rgba(26, 26, 46, 0.8)",
+        rippleColor: "#ff6b6b",
+        rippleSpeed: 1.5,
+        autoAnimate: true,
+        rippleOnClick: true
+      });
+      
+      // Reinitialize text animation after resize
+      new VariableProximity(titleElement, {
+        label: "Welcome to Deep Lungs",
+        containerRef: welcomeContainer,
+        fromFontVariationSettings: "'wght' 400, 'opsz' 14",
+        toFontVariationSettings: "'wght' 900, 'opsz' 144",
+        radius: 100,
+        falloff: "exponential"
+      });
+    });
+  </script>
+
+</body>
+</html>

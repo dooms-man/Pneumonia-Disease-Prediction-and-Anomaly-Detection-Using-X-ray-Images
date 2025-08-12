@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DeepLungs - Health Questionnaire</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&display=swap" rel="stylesheet">
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    body {
+        font-family: 'Inter', 'Segoe UI', sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        overflow-x: hidden;
+        position: relative;
+    }
+    /* Animated Background */
+    .bg-animation {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        overflow: hidden;
+    }
+    .floating-particle {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        animation: float 15s infinite linear;
+        pointer-events: none;
+    }
+    @keyframes float {
+        0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+    }
+    .lung-silhouette {
+        position: absolute;
+        width: 200px;
+        height: 150px;
+        opacity: 0.05;
+        animation: breathe 6s ease-in-out infinite;
+    }
+    @keyframes breathe {
+        0%, 100% { transform: scale(1) rotate(0deg); }
+        50% { transform: scale(1.1) rotate(2deg); }
+    }
+    .lung-left { left: 10%; top: 20%; animation-delay: 0s; }
+    .lung-right { right: 10%; bottom: 20%; animation-delay: 3s; }
+
+    /* Main Container */
+    .main-container {
+        position: relative;
+        z-index: 1;
+        padding: 40px 20px;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .container {
+        max-width: 700px;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        overflow: hidden;
+        animation: slideUp 0.8s ease-out;
+    }
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(50px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .header {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        padding: 40px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    .header h1 {
+        color: white;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .form-content { padding: 40px; }
+    .form-group { margin-bottom: 25px; }
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.95rem;
+    }
+    select {
+        width: 100%;
+        padding: 14px 18px;
+        font-size: 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        background: white;
+        transition: all 0.3s ease;
+        outline: none;
+    }
+    select:focus {
+        border-color: #4facfe;
+        box-shadow: 0 0 0 4px rgba(79, 172, 254, 0.1);
+    }
+    .submit-btn {
+        width: 100%;
+        padding: 18px;
+        font-size: 18px;
+        font-weight: 600;
+        color: white;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .submit-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+    }
+</style>
+</head>
+<body>
+    <div class="bg-animation" id="bgAnimation">
+        <div class="lung-silhouette lung-left">
+            <svg viewBox="0 0 200 150" fill="currentColor" style="color: rgba(255,255,255,0.1);">
+                <path d="M50 30c-20 0-35 15-35 35v30c0 20 15 35 35 35h30c15 0 25-10 25-25V55c0-15-10-25-25-25H50z"/>
+                <path d="M120 40c-15 0-25 10-25 25v40c0 15 10 25 25 25h25c20 0 35-15 35-35V65c0-20-15-35-35-35h-25z"/>
+            </svg>
+        </div>
+        <div class="lung-silhouette lung-right">
+            <svg viewBox="0 0 200 150" fill="currentColor" style="color: rgba(255,255,255,0.1);">
+                <path d="M50 30c-20 0-35 15-35 35v30c0 20 15 35 35 35h30c15 0 25-10 25-25V55c0-15-10-25-25-25H50z"/>
+                <path d="M120 40c-15 0-25 10-25 25v40c0 15 10 25 25 25h25c20 0 35-15 35-35V65c0-20-15-35-35-35h-25z"/>
+            </svg>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="container">
+            <div class="header">
+                <h1>📝 Health Questionnaire</h1>
+                <p>Please answer these questions to help improve your AI diagnosis</p>
+            </div>
+            <div class="form-content">
+                <form id="questionnaireForm" action="/submit_questionnaire" method="POST">
+
+                    <div class="form-group">
+                        <label class="form-label">1. Do you have a fever?</label>
+                        <select name="fever" required>
+                            <option value="" disabled selected>Select</option>
+                            <option>Yes</option>
+                            <option>No</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">2. How severe is your cough?</label>
+                        <select name="cough_severity" required>
+                            <option value="" disabled selected>Select</option>
+                            <option>Mild</option>
+                            <option>Moderate</option>
+                            <option>Severe</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">3. Are you experiencing chest pain?</label>
+                        <select name="chest_pain" required>
+                            <option value="" disabled selected>Select</option>
+                            <option>Yes</option>
+                            <option>No</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">4. How is your breathing?</label>
+                        <select name="breathing" required>
+                            <option value="" disabled selected>Select</option>
+                            <option>Normal</option>
+                            <option>Slight difficulty</option>
+                            <option>Severe difficulty</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">5. How many hours do you sleep per night?</label>
+                        <select name="sleep_hours" required>
+                            <option value="" disabled selected>Select</option>
+                            <option>&lt;5</option>
+                            <option>5-7</option>
+                            <option>7-9</option>
+                            <option>&gt;9</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">6. How much water do you drink daily?</label>
+                        <select name="water_intake" required>
+                            <option value="" disabled selected>Select</option>
+                            <option>&lt;1L</option>
+                            <option>1-2L</option>
+                            <option>&gt;2L</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">7. Are you currently taking any medications?</label>
+                        <select name="medications" required>
+                            <option value="" disabled selected>Select</option>
+                            <option>Yes</option>
+                            <option>No</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">8. How active are you physically?</label>
+                        <select name="physical_activity" required>
+                            <option value="" disabled selected>Select</option>
+                            <option>Sedentary</option>
+                            <option>Lightly active</option>
+                            <option>Moderately active</option>
+                            <option>Very active</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">9. Do you smoke?</label>
+                        <select name="smoking" required>
+                            <option value="" disabled selected>Select</option>
+                            <option>Yes</option>
+                            <option>No</option>
+                        </select>
+                    </div>
+                    <div>
+                       
+                            <button class="submit-btn" type="submit">Submit Questionnaire</button>
+                        
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Floating particles
+    function createFloatingParticles() {
+        const bgAnimation = document.getElementById('bgAnimation');
+        for (let i = 0; i < 20; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'floating-particle';
+            const size = Math.random() * 10 + 5;
+            particle.style.width = size + 'px';
+            particle.style.height = size + 'px';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 15 + 's';
+            particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+            bgAnimation.appendChild(particle);
+        }
+    }
+    createFloatingParticles();
+
+</script>
+</body>
+</html>

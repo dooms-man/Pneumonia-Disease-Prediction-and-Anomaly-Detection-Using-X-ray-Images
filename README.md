@@ -1,75 +1,79 @@
-# Pneumonia-Disease-Prediction-and-Anomaly-Detection-Using-X-ray-Images
-Hybrid Pneumonia Detection Project (ResNet-50 + ViT-B16 + Age Feature)
-=======================================================================
+# 🩺 DeepLungs AI — Hybrid CNN + Vision Transformer for Pneumonia Detection
 
-1. Project Overview
+DeepLungs AI is an advanced AI-driven diagnostic system designed to detect pneumonia from chest X-ray images.  
+Our approach uses a **Hybrid CNN (DenseNet121) + Vision Transformer (ViT)** architecture to combine the strengths of convolutional and attention-based models for superior accuracy and explainability.
 
-Goal: Develop a hybrid deep learning model that detects Pneumonia using both chest X-ray images and patient age.
-- Model Type: Hybrid CNN + Transformer model.
-- Architecture: ResNet-50 (CNN) for local image features + ViT-B16 (Vision Transformer) for global image features.
-- Additional Feature: Patient age integrated into the model to improve diagnostic accuracy.
+---
 
-2. Dataset Details
+## ✨ Key Features
+- **Dual Models**: Separate models for **Adults** and **Pediatrics** to ensure dataset-specific optimization.
+- **Hybrid Architecture**: CNN for local spatial feature extraction + ViT for global context understanding.
+- **CLAHE Preprocessing**: Enhances contrast in medical images to improve feature visibility.
+- **Data Augmentation**: Random flips, rotations for better generalization.
+- **Grad-CAM Explainability**: Visualizes areas influencing the model’s predictions.
 
+---
 
+## 🧠 Model Architecture
 
-3. Data Preprocessing
+### 1️⃣ CNN Feature Extractor
+- **Base**: DenseNet121 (pretrained on ImageNet).
+- Outputs **1024 feature channels** after global average pooling.
 
-- Resize images to 224x224 pixels.
-- Normalize pixel values to range [0, 1].
-- Handle missing or invalid ages; normalize age (0-120) to [0, 1].
-- Balance datasets using oversampling and augmentation (rotation, flipping, etc.).
+### 2️⃣ Vision Transformer (ViT)
+- **Model**: `google/vit-base-patch16-224` (pretrained).
+- Extracts **768-dimensional embeddings** from image patches.
 
-4. Model Architecture
+### 3️⃣ Feature Fusion + Classifier
+```plaintext
+[ CNN Features (1024) ] + [ ViT Features (768) ]
+             ↓ Concatenate
+      Fully Connected Layer (512 → 2 classes)
+- **CNN Branch**: DenseNet121 extracts spatial & texture features from X-ray images.
+- **ViT Branch**: Vision Transformer captures global dependencies and context.
+- **Fusion**: Concatenate DenseNet output (1024 features) with ViT output (768 features).
+- **Classifier**: Fully Connected (512 → 2 neurons) with ReLU + Dropout for binary classification.
 
-- Two parallel input branches:
-  - ResNet-50 CNN (pretrained on ImageNet, backbone frozen initially).
-  - ViT-B16 Transformer (pretrained, handles global context).
-- Age input branch: simple dense layers to process numeric age.
-- Feature fusion: concatenation of CNN, ViT, and age features.
-- Classifier head: Dense layers + sigmoid activation for binary classification.
+---
 
-5. Training Pipeline
+## 🖼️ Image Preprocessing
+- **CLAHE (Contrast Limited Adaptive Histogram Equalization)**  
+  - `clipLimit=2.0`, `tileGridSize=(8,8)` to enhance contrast in X-ray images.
+- **Resize**: Images resized to `(224, 224)` for model input compatibility.
+- **Augmentations** (Training Only):  
+  - Random horizontal flip (simulate variations in patient posture)  
+  - Random rotation (±10°) to improve generalization
 
-- Loss: Binary Cross-Entropy.
-- Optimizer: Adam with learning rate scheduling.
-- Metrics: Accuracy, Precision, Recall, AUC.
-- Hardware: Trained on GPUs (T4 or A100); CPU possible but slower.
-- Training Duration: Multiple epochs until validation accuracy stabilizes.
+---
 
-6. Frontend Design
+## 📊 Results
 
-- Tech Stack: HTML5, CSS3, JavaScript.
-- Features:
-    - Age input (number field).
-    - X-ray image upload (file input, JPEG/PNG).
-    - Image preview before submission.
-    - Analyze button sends data to backend API.
-    - Displays prediction (Pneumonia/Normal) and confidence score.
-- Responsive design for desktop and mobile.
+### **Adult Model (Hybrid CNN + ViT)**
+| Class        | Precision | Recall | F1-Score |
+|--------------|-----------|--------|----------|
+| Normal (0)   | 1.00      | 1.00   | 1.00     |
+| Pneumonia (1)| 1.00      | 1.00   | 1.00     |
+**Accuracy**: **99.82%** 
 
-7. Backend API
--Framework: Flask (Python).
-- Endpoint: POST /predict
-- Accepts: multipart form data (X-ray image + age).
-- Preprocessing: resizes and normalizes image, normalizes age.
-- Feeds inputs to trained model and returns prediction as JSON:
-    {
-      "prediction": "Pneumonia",
-    
-    }
+---
 
-8. Deployment Plan
+### **Pediatric Model (Hybrid CNN + ViT)**
+| Class        | Precision | Recall | F1-Score |
+|--------------|-----------|--------|----------|
+| Normal (0)   | 0.99      | 0.97   | 0.98     |
+| Pneumonia (1)| 0.98      | 0.99   | 0.99     |
+**Accuracy**: **98.8%** (Test set: Pediatric X-rays)
 
-- Local testing: Flask backend + frontend on localhost (http://127.0.0.1:5000).
-- Production: Deploy backend on cloud (Heroku, AWS, Render) and host frontend (Netlify, GitHub Pages).
-- Ensure secure API communication (HTTPS) and CORS handling.
+---
 
-9. Project Roadmap
+## 📚 Research References
+This project builds upon insights from:
+1. Dosovitskiy et al., *"An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale"* — [ViT Paper](https://arxiv.org/abs/2010.11929)
+2. Huang et al., *"Densely Connected Convolutional Networks"* — [DenseNet Paper](https://arxiv.org/abs/1608.06993)
+3. Raghu et al., *"Do Vision Transformers See Like Convolutional Neural Networks?"* — [ViT vs CNN Paper](https://arxiv.org/abs/2108.08810)
 
-- Collect and clean datasets (adult + pediatric).
-- Build and train hybrid model.
-- Develop backend API for inference.
-- Design frontend web interface.
-- Integrate age + X-ray upload and connect frontend to backend.
-- Deploy complete system online.
+---
+
+## 👨‍⚕️ Team
+**DeepLungs AI Hackathon Team** — Innovating medical diagnostics with AI 🚀
+Team Members: Akshara,Aditya,Manas,Manryan
