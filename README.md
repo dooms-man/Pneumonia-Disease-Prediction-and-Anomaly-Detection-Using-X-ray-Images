@@ -36,7 +36,7 @@ Our approach uses a **Hybrid CNN (DenseNet121) + Vision Transformer (ViT)** arch
 
 ---
 
-## 🖼️ Image Preprocessing
+### 🖼️ Image Preprocessing
 - **CLAHE (Contrast Limited Adaptive Histogram Equalization)**  
   - `clipLimit=2.0`, `tileGridSize=(8,8)` to enhance contrast in X-ray images.
 - **Resize**: Images resized to `(224, 224)` for model input compatibility.
@@ -46,7 +46,7 @@ Our approach uses a **Hybrid CNN (DenseNet121) + Vision Transformer (ViT)** arch
 
 ---
 
-## 📊 Results
+### 📊 Results
 
 ### **Adult Model (Hybrid CNN + ViT)**
 | Class        | Precision | Recall | F1-Score |
@@ -66,7 +66,7 @@ Our approach uses a **Hybrid CNN (DenseNet121) + Vision Transformer (ViT)** arch
 
 ---
 
-## 📚 Research References
+### 📚 Research References
 This project builds upon insights from:
 1. Dosovitskiy et al., *"An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale"* — [ViT Paper](https://arxiv.org/abs/2010.11929)
 2. Huang et al., *"Densely Connected Convolutional Networks"* — [DenseNet Paper](https://arxiv.org/abs/1608.06993)
@@ -74,6 +74,6 @@ This project builds upon insights from:
 
 ---
 
-## 👨‍⚕️ Team
+### 👨‍⚕️ Team
 **DeepLungs AI Hackathon Team** — Innovating medical diagnostics with AI 🚀
 Team Members: Akshara,Aditya,Manas,Manryan
