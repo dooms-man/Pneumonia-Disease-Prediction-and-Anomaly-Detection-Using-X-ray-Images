@@ -5,12 +5,13 @@ Our approach uses a **Hybrid CNN (DenseNet121) + Vision Transformer (ViT)** arch
 
 ---
 
-## ✨ Key Features
-- **Dual Models**: Separate models for **Adults** and **Pediatrics** to ensure dataset-specific optimization.
-- **Hybrid Architecture**: CNN for local spatial feature extraction + ViT for global context understanding.
-- **CLAHE Preprocessing**: Enhances contrast in medical images to improve feature visibility.
-- **Data Augmentation**: Random flips, rotations for better generalization.
-- **Grad-CAM Explainability**: Visualizes areas influencing the model’s predictions.
+## 📑 Index  
+1. [Model Architecture](#-model-architecture)
+2. [Features](#-Features)
+3. [Image Preprocessing](#️-image-preprocessing)  
+4. [Results](#-results)  
+5. [Research References](#-research-references)  
+6. [Team](#-team)  
 
 ---
 
@@ -24,14 +25,28 @@ Our approach uses a **Hybrid CNN (DenseNet121) + Vision Transformer (ViT)** arch
 - **Model**: `google/vit-base-patch16-224` (pretrained).
 - Extracts **768-dimensional embeddings** from image patches.
 
-### 3️⃣ Feature Fusion + Classifier
-[ CNN Features (1024) ] + [ ViT Features (768) ]
-             ↓ Concatenate
-      Fully Connected Layer (512 → 2 classes)
-- **CNN Branch**: DenseNet121 extracts spatial & texture features from X-ray images.
-- **ViT Branch**: Vision Transformer captures global dependencies and context.
-- **Fusion**: Concatenate DenseNet output (1024 features) with ViT output (768 features).
-- **Classifier**: Fully Connected (512 → 2 neurons) with ReLU + Dropout for binary classification.
+### 🚀 Features
+
+- **Dual Specialized Models** — Separate CNN+ViT hybrid models for **adult** and **pediatric** patients for age-specific accuracy.  
+- **Advanced Image Preprocessing** — CLAHE-based enhancement for better lung detail visibility.  
+- **Automated Chest X-ray Validation** — Rejects non-X-ray images before running predictions.  
+- **Explainable AI**  
+  - **Grad-CAM Heatmaps** — Highlights pneumonia-affected lung regions.  
+  - **ViT Attention Maps** — Visualizes model’s attention focus.  
+  - **Hotspot Summarization** — Detects and names affected lung quadrants.  
+- **AI-Generated Medical Guidance** — Hugging Face Zephyr LLM produces:  
+  - **Patient-friendly summaries** with next steps & prevention tips.  
+  - **Clinician-oriented interpretations** for medical decision support.  
+- **Interactive Patient Questionnaire** — Collects key symptom and lifestyle data to personalize results.  
+- **Doctor Finder** — Locate nearby healthcare providers using Google Places API or OpenStreetMap fallback.  
+- **Air Quality Integration** — Fetches live AQI data with health recommendations.  
+- **One-Click PDF Reports** — Beautifully formatted report with:  
+  - Patient info  
+  - AI predictions & confidence  
+  - Health guidance  
+  - Questionnaire responses  
+  - Grad-CAM & ViT attention images  
+  - Professional disclaimer
 
 ---
 
@@ -49,7 +64,7 @@ Our approach uses a **Hybrid CNN (DenseNet121) + Vision Transformer (ViT)** arch
 
 ### **Adult Model (Hybrid CNN + ViT)**
 | Class        | Precision | Recall | F1-Score |
-|--------------|-----------|--------|----------|
+|--------------|-----------|s--------|----------|
 | Normal (0)   | 1.00      | 1.00   | 1.00     |
 | Pneumonia (1)| 1.00      | 1.00   | 1.00     |
 **Accuracy**: **99.82%** 
@@ -70,6 +85,7 @@ This project builds upon insights from:
 1. Dosovitskiy et al., *"An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale"* — [ViT Paper](https://arxiv.org/abs/2010.11929)
 2. Huang et al., *"Densely Connected Convolutional Networks"* — [DenseNet Paper](https://arxiv.org/abs/1608.06993)
 3. Raghu et al., *"Do Vision Transformers See Like Convolutional Neural Networks?"* — [ViT vs CNN Paper](https://arxiv.org/abs/2108.08810)
+4. Generative Deep Learning by David Foster
 
 ---
 
