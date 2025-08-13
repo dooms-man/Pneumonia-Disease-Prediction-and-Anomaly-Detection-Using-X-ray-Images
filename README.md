@@ -64,7 +64,7 @@ Our approach uses a **Hybrid CNN (DenseNet121) + Vision Transformer (ViT)** arch
 
 ### **Adult Model (Hybrid CNN + ViT)**
 | Class        | Precision | Recall | F1-Score |
-|--------------|-----------|s--------|----------|
+|--------------|-----------|--------|----------|
 | Normal (0)   | 1.00      | 1.00   | 1.00     |
 | Pneumonia (1)| 1.00      | 1.00   | 1.00     |
 **Accuracy**: **99.82%** 
