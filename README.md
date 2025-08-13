@@ -18,11 +18,11 @@ Our approach uses a **Hybrid CNN (DenseNet121) + Vision Transformer (ViT)** arch
 ## 🧠 Model Architecture
 
 ### 1️⃣ CNN Feature Extractor
-- **Base**: DenseNet121 (pretrained on ImageNet).
+- **Base**: DenseNet121 (ImageNet).
 - Outputs **1024 feature channels** after global average pooling.
 
 ### 2️⃣ Vision Transformer (ViT)
-- **Model**: `google/vit-base-patch16-224` (pretrained).
+- **Model**: `google/vit-base-patch16-224`.
 - Extracts **768-dimensional embeddings** from image patches.
 
 ### 🚀 Features
@@ -91,4 +91,4 @@ This project builds upon insights from:
 
 ### 👨‍⚕️ Team
 **DeepLungs AI Hackathon Team** — Innovating medical diagnostics with AI 🚀
-Team Members: Akshara,Aditya,Manas,Manryan
+Team Members: Akshara,Aditya,Manas,Ryan
