@@ -596,6 +596,22 @@
                             <img id="attentionImage" class="result-image" src="" alt="Vision Transformer Attention">
                         </div>
 
+                         <!-- New Button -->    
+                        <button onclick="showNearbyDoctors()" 
+                                style="margin-top: 15px; padding: 10px 15px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            🩺 Find Nearby Doctors
+                        </button>
+                    </div>
+
+                    <!-- Map section hidden until button click -->
+                    <div id="mapSection" style="width: 100%; height: 400px; display: none; margin-top: 20px;"></div>
+
+                    <div id="airQualitySection" style="margin-top: 20px; padding: 15px; border-radius: 8px; background: #f0f9ff;">
+                        <h4>🌬 Local Air Quality</h4>
+                        <p id="aqiStatus">Loading air quality data...</p>
+                    </div>
+
+
                         <div class="result-item" id="reportSection" style="display:none; margin-top:20px;">
                         <button id="downloadReportBtn" class="submit-btn" style="background:linear-gradient(135deg,#22c55e,#16a34a);">
                         📄 Download PDF Report
@@ -763,12 +779,105 @@
                 }
             });
         });
+
+   
         // Show download report button
         document.getElementById('reportSection').style.display = 'block';
 
         document.getElementById('downloadReportBtn').onclick = () => {
             window.location.href = '/download_report';
 };
+
+  function initMap(lat, lng, results) {
+    const map = new google.maps.Map(document.getElementById("mapSection"), {
+        center: { lat: lat, lng: lng },
+        zoom: 14
+    });
+
+    // Marker for user's location
+    new google.maps.Marker({
+        position: { lat: lat, lng: lng },
+        map: map,
+        title: "Your Location",
+        icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+    });
+
+    // Markers for doctors (works for both Google & OSM fallback)
+    results.forEach(place => {
+        const location = place.geometry?.location || { lat: place.lat, lng: place.lng };
+
+        new google.maps.Marker({
+            position: { lat: location.lat, lng: location.lng },
+            map: map,
+            title: place.name || "Doctor",
+            icon: "http://maps.google.com/mapfiles/ms/icons/red-dot.png"
+        });
+    });
+}
+
+    function showNearbyDoctors() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                fetch(`/nearby_doctors?lat=${lat}&lon=${lng}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.results && data.results.length > 0) {
+                            document.getElementById("mapSection").style.display = "block";
+                            initMap(lat, lng, data.results);
+                        } else {
+                            alert("No nearby doctors found.");
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error fetching nearby doctors:", err);
+                        alert("Could not fetch nearby doctors. Please try again later.");
+                    });
+            });
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+    }
+
+async function fetchAirQuality() {
+  if (!navigator.geolocation) {
+    console.error("Geolocation not supported.");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+
+    try {
+      const res = await fetch(`/air_quality?lat=${lat}&lon=${lon}`);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      const idx = data.currentConditions?.indexes?.[0]?.value ?? null;
+      const pollutant = data.currentConditions?.pollutants?.[0]?.code ?? "N/A";
+      const desc = idx
+        ? `AQI: ${idx} — Pollutant: ${pollutant}`
+        : "No data available";
+
+      document.getElementById('aqiStatus').innerText = desc;
+    } catch (err) {
+      console.error("AQI error:", err);
+      document.getElementById('aqiStatus').innerText =
+        "Unable to retrieve air quality.";
+    }
+  });
+}
+
+// Call it when page loads
+fetchAirQuality();
+
+
+
+
+
     </script>
 <!-- Sci-Fi Themed Loading Overlay -->
 <div id="loadingOverlay">
@@ -782,5 +891,8 @@
     <p class="loading-subtext">Analyzing radiographic input...</p>
   </div>
 </div>
+
+<!-- Load Google Maps API -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyArpCL0MD4VvKpISAEuG14JgtOCgPpZHKE&libraries=places&loading=async" async></script>
 </body>
 </html>
