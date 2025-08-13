@@ -18,12 +18,19 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as RLImage
 from reportlab.lib.units import inch
+import requests 
 
 # ---------- Load environment ----------
 load_dotenv()
 HF_TOKEN = os.getenv("HF_TOKEN")
+GOOGLE_PLACES_KEY = os.getenv("GOOGLE_PLACES_KEY")  # put your Google Places API key in .env
+
 if not HF_TOKEN:
     raise ValueError("HF_TOKEN not found — please set it in your .env file")
+if not GOOGLE_PLACES_KEY:
+    # Allow server start but return error from nearby_doctors if missing
+    print("Warning: GOOGLE_PLACES_KEY not set in .env — /nearby_doctors will fail until set.")
+
 
 # ---------- Hugging Face Zephyr client ----------
 client = InferenceClient(
@@ -56,7 +63,7 @@ class_labels = ['Normal', 'Pneumonia']
 
 # ---------- CLAHE ----------
 class CLAHETransform:
-    def __call__(self, img):
+    def _call_(self, img):
         img_cv = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2GRAY)
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
         cl_img = clahe.apply(img_cv)
@@ -212,22 +219,22 @@ def build_patient_prompt(prediction, confidence, age, hotspots, triage):
         f"Use plain language, avoid jargon, and be empathetic."
 f"""
 Your job:
-1. *Only* talk about findings directly related to pneumonia or lung health. Do not mention unrelated conditions (e.g., cholesterol, cancer, heart disease) unless explicitly given in the input.
-2. Output *structured patient-friendly advice* with these sections:
+1. Only talk about findings directly related to pneumonia or lung health. Do not mention unrelated conditions (e.g., cholesterol, cancer, heart disease) unless explicitly given in the input.
+2. Output structured patient-friendly advice with these sections:
 
-🔹 *Overview:* One or two sentences summarizing result in friendly, clear language.  
+🔹 Overview: One or two sentences summarizing result in friendly, clear language.  
    - If "Normal" → sound relieved and reassuring, celebrate the good news, and optionally suggest routine health habits.  
    - If "Pneumonia" or abnormal → explain simply and calmly what this means.
    
-🔹 *Recommended Next Steps:*  
+🔹 Recommended Next Steps:  
    - If "Normal" → Suggest routine checkups, healthy habits, and when to seek care if symptoms arise.  
    - If "Pneumonia"or abnormal → Provide urgent-but-calm steps: when to see a doctor, possible next tests, symptom watchlist.
 
-🔹 *Preventive Tips:*  
+🔹 Preventive Tips:  
    - If "Normal" → Mention lung health tips (hydration, exercise, avoid smoking, vaccines).  
    - If "Pneumonia" or abnormal → Mention recovery tips and prevention of worsening.
 
-🔹 *Important Note:*  
+🔹 Important Note:  
    Always include: "This is AI-generated preliminary guidance. Please consult a qualified medical professional for a final diagnosis."
 
 Tone guide:
@@ -258,22 +265,22 @@ def build_clinician_prompt(prediction, confidence, age, hotspots, triage):
        f"""
 
 Your job:
-1. *Only* talk about findings directly related to pneumonia or lung health. Do not mention unrelated conditions (e.g., cholesterol, cancer, heart disease) unless explicitly given in the input.
-2. Output *structured patient-friendly advice* with these sections:
+1. Only talk about findings directly related to pneumonia or lung health. Do not mention unrelated conditions (e.g., cholesterol, cancer, heart disease) unless explicitly given in the input.
+2. Output structured patient-friendly advice with these sections:
 
-🔹 *Overview:* One or two sentences summarizing result in friendly, clear language.  
+🔹 Overview: One or two sentences summarizing result in friendly, clear language.  
    - If "Normal" → sound relieved and reassuring, celebrate the good news, and optionally suggest routine health habits.  
    - If "Pneumonia" or abnormal → explain simply and calmly what this means.
    
-🔹 *Recommended Next Steps:*  
+🔹 Recommended Next Steps:  
    - If "Normal" → Suggest routine checkups, healthy habits, and when to seek care if symptoms arise.  
    - If "Pneumonia" or abnormal → Provide urgent-but-calm steps: when to see a doctor, possible next tests, symptom watchlist.
 
-🔹 *Preventive Tips:*  
+🔹 Preventive Tips:  
    - If "Normal" → Mention lung health tips (hydration, exercise, avoid smoking, vaccines).  
    - If "Pneumonia" or abnormal → Mention recovery tips and prevention of worsening.
 
-🔹 *Important Note:*  
+🔹 Important Note:  
    Always include: "This is AI-generated preliminary guidance. Please consult a qualified medical professional for a final diagnosis."
 
 Tone guide:
@@ -415,6 +422,144 @@ def predict():
     except Exception as e:
         print(f"Prediction route error: {e}")
         return jsonify({'error': 'Prediction failed due to server error'}), 500
+
+        #from flask import request, jsonify
+
+#GOOGLE_PLACES_KEY = "AiLL9DPaL9WAZ-NeFu2i_zUEAn3SUIzaSyCRfn3"
+   #(Google Places) ----------
+@app.route("/nearby_doctors", methods=["GET"])
+def nearby_doctors():
+    lat = request.args.get("lat")
+    lon = request.args.get("lon")
+
+    if not lat or not lon:
+        return jsonify({"error": "Missing coordinates lat and lon"}), 400
+
+    # ===== 1️⃣ Try Google Places API =====
+    if GOOGLE_PLACES_KEY:
+        url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+        params = {
+            "location": f"{lat},{lon}",
+            "radius": 5000,  # 5 km
+            "type": "doctor",
+            "key": GOOGLE_PLACES_KEY
+        }
+        try:
+            resp = requests.get(url, params=params, timeout=8)
+            data = resp.json()
+            print("Google Places API raw response:", data)
+
+            # If Google works & returns results
+            if data.get("status") == "OK" and data.get("results"):
+                return jsonify(data)
+        except Exception as e:
+            print(f"Google Places API error: {e}")
+
+    # ===== 2️⃣ Fallback: OpenStreetMap Nominatim =====
+    try:
+        osm_url = "https://nominatim.openstreetmap.org/search"
+        osm_params = {
+            "q": "doctor",
+            "format": "json",
+            "limit": 10,
+            "lat": lat,
+            "lon": lon
+        }
+        headers = {"User-Agent": "DeepLungsAI/1.0"}
+        osm_resp = requests.get(osm_url, params=osm_params, headers=headers, timeout=8)
+        osm_data = osm_resp.json()
+
+        # Format OSM results to match Google-like structure
+        formatted_results = [
+            {
+                "name": place.get("display_name"),
+                "geometry": {
+                    "location": {
+                        "lat": float(place["lat"]),
+                        "lng": float(place["lon"])
+                    }
+                }
+            }
+            for place in osm_data
+        ]
+
+        return jsonify({"results": formatted_results, "status": "OK"})
+    except Exception as e:
+        return jsonify({"error": f"Both Google and OSM failed: {e}"}), 500
+@app.route("/air_quality", methods=["GET"])
+def air_quality():
+    lat = request.args.get("lat")
+    lon = request.args.get("lon")
+
+    if not lat or not lon:
+        return jsonify({"error": "Missing coordinates lat and lon"}), 400
+
+    if not GOOGLE_PLACES_KEY:
+        return jsonify({
+            "currentConditions": {
+                "indexes": [{"value": 75}],
+                "pollutants": [{"code": "PM2.5"}]
+            }
+        })
+
+    try:
+        url = f"https://airquality.googleapis.com/v1/currentConditions:lookup?key={GOOGLE_PLACES_KEY}"
+        payload = {
+            "location": {"latitude": float(lat), "longitude": float(lon)},
+            "extraComputations": ["HEALTH_RECOMMENDATIONS"],
+            "languageCode": "en"
+        }
+
+        resp = requests.post(url, json=payload, timeout=8)
+        resp.raise_for_status()
+        raw = resp.json()
+
+        # Extract AQI & pollutant
+        idx_value = None
+        pollutant_code = None
+        if "indexes" in raw and raw["indexes"]:
+            idx_value = raw["indexes"][0].get("aqi")
+            pollutant_code = raw["indexes"][0].get("dominantPollutant")
+
+        return jsonify({
+            "currentConditions": {
+                "indexes": [{"value": idx_value}],
+                "pollutants": [{"code": pollutant_code}]
+            }
+        })
+
+    except requests.RequestException as e:
+        print(f"[ERROR] AQI API request failed: {e}")
+        return jsonify({"error": "Failed to fetch air quality"}), 500
+
+
+
+from flask import send_file
+import io
+import os
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+from PIL import Image, ImageDraw
+
+# Function to create a circular logo
+def make_circle_image(image_path, size=(60, 60)):
+    img = Image.open(image_path).convert("RGBA")
+    img = img.resize(size, Image.LANCZOS)
+
+    # Create circular mask
+    mask = Image.new("L", size, 0)
+    draw = ImageDraw.Draw(mask)
+    draw.ellipse((0, 0, size[0], size[1]), fill=255)
+    img.putalpha(mask)
+
+    img_bytes = io.BytesIO()
+    img.save(img_bytes, format="PNG")
+    img_bytes.seek(0)
+    return img_bytes
+
 @app.route('/download_report', methods=['GET'])
 def download_report():
     global last_report_data
@@ -422,61 +567,111 @@ def download_report():
         return "No report data available. Please run a diagnosis first.", 400
 
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        rightMargin=40,
+        leftMargin=40,
+        topMargin=40,
+        bottomMargin=40
+    )
     styles = getSampleStyleSheet()
     story = []
 
-    # Title
-    story.append(Paragraph("🫁 DeepLungs AI Diagnosis Report", styles['Title']))
-    story.append(Spacer(1, 12))
+    # Custom styles
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Title'],
+        fontSize=20,
+        spaceAfter=20,
+        alignment=0  # left align
+    )
+    heading_style = ParagraphStyle(
+        'HeadingCustom',
+        parent=styles['Heading2'],
+        spaceAfter=10,
+        textColor=colors.HexColor("#0B5394")
+    )
 
-    # Patient Info
-    story.append(Paragraph(f"<b>Name:</b> {last_report_data['name']}", styles['Normal']))
-    story.append(Paragraph(f"<b>Age:</b> {last_report_data['age']}", styles['Normal']))
-    story.append(Paragraph(f"<b>Gender:</b> {last_report_data['gender']}", styles['Normal']))
-    story.append(Spacer(1, 12))
+    # ---- Logo + Title Row ----
+    logo_path = os.path.join("static", "images", "deep_lungs_logo.png")
+    if os.path.exists(logo_path):
+        circular_logo = make_circle_image(logo_path)
+        logo = RLImage(circular_logo, width=0.8*inch, height=0.8*inch)
+        title = Paragraph(" DeepLungs AI Diagnosis Report", title_style)
 
-    # Diagnosis
+        table_data = [[logo, title]]
+        table = Table(table_data, colWidths=[1*inch, 5*inch])
+        table.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 0),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+            ('TOPPADDING', (0, 0), (-1, -1), 0),
+        ]))
+        story.append(table)
+    else:
+        story.append(Paragraph("🫁 DeepLungs AI Diagnosis Report", title_style))
+
+    story.append(Spacer(1, 20))
+
+    # ---- Patient Info ----
+    patient_data = [
+        ["Name", last_report_data['name']],
+        ["Age", str(last_report_data['age'])],
+        ["Gender", last_report_data['gender']]
+    ]
+    patient_table = Table(patient_data, colWidths=[1.5*inch, 4.5*inch])
+    patient_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor("#E1EAF2")),
+        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 11),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey)
+    ]))
+    story.append(patient_table)
+    story.append(Spacer(1, 15))
+
+    # ---- Diagnosis ----
     story.append(Paragraph(f"<b>Diagnosis:</b> {last_report_data['label']}", styles['Normal']))
     story.append(Paragraph(f"<b>Confidence:</b> {last_report_data['confidence']}", styles['Normal']))
-    story.append(Spacer(1, 12))
+    story.append(Spacer(1, 15))
 
-    # Guidance
-    story.append(Paragraph("<b>AI Health Guidance:</b>", styles['Heading2']))
+    # ---- Guidance ----
+    story.append(Paragraph("AI Health Guidance", heading_style))
     story.append(Paragraph(last_report_data['guidance'].replace("\n", "<br/>"), styles['Normal']))
-    story.append(Spacer(1, 12))
+    story.append(Spacer(1, 15))
 
-    # Questionnaire section
+    # ---- Questionnaire ----
     if last_report_data.get("questionnaire"):
-        story.append(Paragraph("<b>Patient Questionnaire Responses:</b>", styles['Heading2']))
+        story.append(Paragraph("Patient Questionnaire Responses", heading_style))
         for key, value in last_report_data["questionnaire"].items():
-            # Convert list answers to comma-separated string
             if isinstance(value, list):
-                    value = ", ".join(value) if value else "N/A"
-                    story.append(Paragraph(f"<b>{key.replace('_', ' ').title()}:</b> {value}", styles['Normal']))
-                    story.append(Spacer(1, 12))
+                value = ", ".join(value) if value else "N/A"
+            story.append(Paragraph(f"<b>{key.replace('_', ' ').title()}:</b> {value}", styles['Normal']))
+        story.append(Spacer(1, 15))
 
-    # Images
+    # ---- Images ----
     for img_path, label in [
         (last_report_data['gradcam_url'], "Grad-CAM Heatmap"),
         (last_report_data['attention_url'], "ViT Attention Map")
     ]:
         if img_path and os.path.exists(img_path):
-            story.append(Paragraph(f"<b>{label}:</b>", styles['Heading3']))
+            story.append(Paragraph(label, heading_style))
             story.append(RLImage(img_path, width=4*inch, height=4*inch))
             story.append(Spacer(1, 12))
 
+    # ---- Build PDF ----
     doc.build(story)
     buffer.seek(0)
 
     return send_file(
-    buffer,
-    as_attachment=True,
-    download_name=f"DeepLungs_Report_{last_report_data['name'].replace(' ', '_')}.pdf",
-    mimetype='application/pdf'
+        buffer,
+        as_attachment=True,
+        download_name=f"DeepLungs_Report_{last_report_data['name'].replace(' ', '_')}.pdf",
+        mimetype='application/pdf'
     )
 
-
-
-if __name__ == '__main__':
+if __name__ == '_main_':
     app.run(debug=True)
